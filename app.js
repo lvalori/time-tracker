@@ -1,272 +1,294 @@
-let timer;
-let startTime;
-let time = 0;
-let isRunning = false;
-let savedRecords = [];
-let startTimeRilevazione;
-let endTimeRilevazione;
+document.addEventListener('DOMContentLoaded', () => {
+    const newProjectBtn = document.getElementById('new-project-btn');
+    const projectForm = document.getElementById('project-form');
+    const newRecordScreen = document.getElementById('new-record-screen');
+    const savedRecordsSection = document.getElementById('saved-records');
+    const startTimerBtn = document.getElementById('start-timer-btn');
+    const stopTimerBtn = document.getElementById('stop-timer-btn');
+    const saveRecordBtn = document.getElementById('save-record-btn');
+    const endRecordBtn = document.getElementById('end-record-btn');
+    const downloadExcelBtn = document.getElementById('download-excel-btn');
+    const imageUploadInput = document.getElementById('image-upload');
+    const imagePreview = document.getElementById('image-preview');
 
-// Funzioni Timer
-function startTimer() {
-    if (isRunning) return;
-    isRunning = true;
-    startTime = performance.now() - time * 1000;
-    timer = requestAnimationFrame(updateTimer);
-
-    if (time === 0) {
-        startTimeRilevazione = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
-}
-
-function stopTimer() {
-    if (!isRunning) return;
-    isRunning = false;
-    cancelAnimationFrame(timer);
-
-    endTimeRilevazione = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-    const currentTime = performance.now();
-    const elapsedMilliseconds = currentTime - startTime;
-    time = Math.floor(elapsedMilliseconds / 1000);
-    document.getElementById('timer').textContent = formatTime(time);
-}
-
-function updateTimer() {
-    if (!isRunning) return;
-
-    const currentTime = performance.now();
-    const elapsedMilliseconds = currentTime - startTime;
-
-    time = Math.floor(elapsedMilliseconds / 1000);
-    document.getElementById('timer').textContent = formatTime(time, elapsedMilliseconds);
-
-    timer = requestAnimationFrame(updateTimer);
-}
-
-function formatTime(seconds, milliseconds = null) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    const wholeSeconds = Math.floor(remainingSeconds);
-
-    if (milliseconds !== null) {
-        const centiseconds = Math.floor((milliseconds % 1000) / 10);
-        return `${padZero(minutes)}:${padZero(wholeSeconds)}.${padZero(centiseconds)}`;
-    } else {
-        return `${padZero(minutes)}:${padZero(wholeSeconds)}`;
-    }
-}
-
-function padZero(num) {
-    return num < 10 ? '0' + num : num;
-}
-// Funzioni Form e Record
-function showProjectForm() {
-    document.getElementById('new-record-screen').classList.add('hidden');
-    document.getElementById('project-form').classList.remove('hidden');
-    document.getElementById('saved-records').classList.add('hidden');
-}
-
-async function saveRecord() {
-    const projectName = document.getElementById('project-name').value;
-    const image = document.getElementById('image-upload').files[0];
-    const phase = document.getElementById('phase-select').value;
-    const positionDescription = document.getElementById('position-description').value;
-    const recordedTime = formatTime(time);
-
-    let imageName = null;
-
-    if (image) {
-        try {
-            imageName = image.name;
-
-            const formData = new FormData();
-            formData.append('image', image);
-
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Error uploading image: ${response.status} - ${errorText}`);
-            }
-        } catch (error) {
-            console.error("Error saving image:", error);
-            alert(`Error saving image: ${error.message}`);
-            return;
-        }
-    }
-
-    const record = {
-        projectName,
-        imageName: imageName,
-        phase,
-        positionDescription,
-        recordedTime
-    };
-
-    savedRecords.push(record);
-
-    time = 0;
-    document.getElementById('timer').textContent = '00:00:00';
-    document.getElementById('position-description').value = '';
-    document.getElementById('new-record-screen').classList.remove('hidden');
-    document.getElementById('project-form').classList.add('hidden');
-
-    displaySavedRecords();
-    alert('Rilevazione salvata con successo!');
-}
-
-function displaySavedRecords() {
-    const recordsList = document.getElementById('records-list');
-    recordsList.innerHTML = '';
-
-    const groupedRecords = savedRecords.reduce((groups, record) => {
-        if (!groups[record.phase]) {
-            groups[record.phase] = [];
-        }
-        groups[record.phase].push(record);
-        return groups;
-    }, {});
-
-    Object.keys(groupedRecords).forEach(phase => {
-        const phaseGroup = groupedRecords[phase];
-
-        const phaseTitle = document.createElement('h4');
-        phaseTitle.textContent = phase.charAt(0).toUpperCase() + phase.slice(1);
-        recordsList.appendChild(phaseTitle);
-
-        const phaseList = document.createElement('ul');
-        phaseGroup.forEach(record => {
-            const listItem = document.createElement('li');
-            listItem.innerHTML = `
-                <strong>Progetto: </strong>${record.projectName}<br>
-                <strong>Posizione: </strong>${record.positionDescription}<br>
-                <strong>Tempo: </strong>${record.recordedTime}<br>`;
-            phaseList.appendChild(listItem);
-        });
-        recordsList.appendChild(phaseList);
+    newProjectBtn.addEventListener('click', () => {
+        showProjectForm();
     });
 
-    document.getElementById('saved-records').classList.remove('hidden');
-}
+    startTimerBtn.addEventListener('click', () => {
+        startTimer();
+    });
 
-function endRecord() {
-    console.log("Clicked 'End'");
-    saveRecord();
-    document.getElementById('end-record-btn').classList.add('hidden');
-    document.getElementById('download-excel-btn').classList.remove('hidden');
-}
-function downloadExcel() {
-    try {
-        if (typeof XLSX === 'undefined') {
-            throw new Error("XLSX library not loaded.");
+    stopTimerBtn.addEventListener('click', () => {
+        stopTimer();
+    });
+
+    saveRecordBtn.addEventListener('click', () => {
+        saveRecord();
+    });
+
+    endRecordBtn.addEventListener('click', () => {
+        endRecord();
+    });
+
+    downloadExcelBtn.addEventListener('click', () => {
+        downloadExcel();
+    });
+
+    imageUploadInput.addEventListener('change', () => {
+        displayImagePreview();
+    });
+
+    function showProjectForm() {
+        newRecordScreen.classList.add('hidden');
+        projectForm.classList.remove('hidden');
+        savedRecordsSection.classList.add('hidden');
+    }
+
+    function displayImagePreview() {
+        const file = imageUploadInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                imagePreview.src = e.target.result;
+                imagePreview.classList.add('visible');
+                imagePreview.style.width = '150px'; // Set the width of the thumbnail
+                imagePreview.style.height = 'auto'; // Maintain aspect ratio
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Timer functions
+    let timer;
+    let startTime;
+    let time = 0;
+    let isRunning = false;
+    let savedRecords = [];
+    let startTimeRilevazione;
+    let endTimeRilevazione;
+
+    function startTimer() {
+        if (isRunning) return;
+        isRunning = true;
+        startTime = performance.now() - time * 1000;
+        timer = requestAnimationFrame(updateTimer);
+
+        if (time === 0) {
+            startTimeRilevazione = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+    }
+
+    function stopTimer() {
+        if (!isRunning) return;
+        isRunning = false;
+        cancelAnimationFrame(timer);
+
+        endTimeRilevazione = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        const currentTime = performance.now();
+        const elapsedMilliseconds = currentTime - startTime;
+        time = Math.floor(elapsedMilliseconds / 1000);
+        document.getElementById('timer').textContent = formatTime(time);
+    }
+
+    function updateTimer() {
+        if (!isRunning) return;
+
+        const currentTime = performance.now();
+        const elapsedMilliseconds = currentTime - startTime;
+
+        time = Math.floor(elapsedMilliseconds / 1000);
+        document.getElementById('timer').textContent = formatTime(time, elapsedMilliseconds);
+
+        timer = requestAnimationFrame(updateTimer);
+    }
+
+    function formatTime(seconds, milliseconds = null) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        const wholeSeconds = Math.floor(remainingSeconds);
+
+        if (milliseconds !== null) {
+            const centiseconds = Math.floor((milliseconds % 1000) / 10);
+            return `${padZero(minutes)}:${padZero(wholeSeconds)}.${padZero(centiseconds)}`;
+        } else {
+            return `${padZero(minutes)}:${padZero(wholeSeconds)}`;
+        }
+    }
+
+    function padZero(num) {
+        return num < 10 ? '0' + num : num;
+    }
+
+    // Form and record functions
+    async function saveRecord() {
+        const projectName = document.getElementById('project-name').value;
+        const image = document.getElementById('image-upload').files[0];
+        const phase = document.getElementById('phase-select').value;
+        const positionDescription = document.getElementById('position-description').value;
+        const recordedTime = formatTime(time);
+
+        if (!projectName || !phase || !positionDescription || time === 0) {
+            alert("Assicurati che tutti i campi siano compilati e che il timer sia stato avviato.");
+            return;
         }
 
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet([]);
+        let imageName = null;
 
-        const projectName = document.getElementById('project-name').value;
-        const fileName = `${projectName}.xlsx`;
+        if (image) {
+            try {
+                imageName = image.name;
 
-        const headerStyle = {
-            font: {
-                bold: true,
-                sz: 26
+                const formData = new FormData();
+                formData.append('image', image);
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Error uploading image: ${response.status} - ${errorText}`);
+                }
+            } catch (error) {
+                console.error("Error saving image:", error);
+                alert(`Error saving image: ${error.message}`);
+                return;
             }
+        }
+
+        const record = {
+            projectName,
+            imageName: imageName,
+            phase,
+            positionDescription,
+            recordedTime
         };
 
-        XLSX.utils.sheet_add_aoa(ws, [[projectName]], { origin: 'B1' });
-        ws['B1'].s = headerStyle;
+        savedRecords.push(record);
 
-        if (savedRecords.length > 0 && savedRecords[0].imageName) {
-            const imageUrl = `/images/${savedRecords[0].imageName}`;
-            XLSX.utils.sheet_add_aoa(ws, [[`<a href="${imageUrl}">Image</a>`]], { origin: 'A2' });
-        }
+        time = 0;
+        document.getElementById('timer').textContent = '00:00';
+        document.getElementById('position-description').value = '';
+        newRecordScreen.classList.remove('hidden');
+        projectForm.classList.add('hidden');
 
-        const tableHeader = ['FASE', 'POSIZIONE', 'TEMPO'];
-        XLSX.utils.sheet_add_aoa(ws, [tableHeader], { origin: 'A3' });
+        displaySavedRecords();
+        alert('Rilevazione salvata con successo!');
+    }
 
-        let row = 4;
-        savedRecords.forEach(record => {
-            let formattedTime = record.recordedTime;
+    function displaySavedRecords() {
+        const recordsList = document.getElementById('records-list');
+        recordsList.innerHTML = '';
 
-            formattedTime = formattedTime.replace(/<span class="math-inline">|<\/span>/g, '');
-            formattedTime = formattedTime.replace(/\{/g, '');
-            formattedTime = formattedTime.replace(/\}/g, '');
-
-            if (!/^\d{2}:\d{2}:\d{2}$/.test(formattedTime) && !/^\d+:\d{2}:\d{2}$/.test(formattedTime)) {
-                const timeParts = formattedTime.split(':');
-                if (timeParts.length === 3) {
-                    const hours = parseInt(timeParts[0]);
-                    const minutes = parseInt(timeParts[1]);
-                    const seconds = parseInt(timeParts[2]);
-
-                    if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
-                        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-                        formattedTime = formatSecondsToHHMMSS(totalSeconds);
-                    }
-                }
+        const groupedRecords = savedRecords.reduce((groups, record) => {
+            if (!groups[record.phase]) {
+                groups[record.phase] = [];
             }
+            groups[record.phase].push(record);
+            return groups;
+        }, {});
 
-            const timePartsExcel = formattedTime.split(':');
-            const hoursExcel = parseInt(timePartsExcel[0]);
-            const minutesExcel = parseInt(timePartsExcel[1]);
-            const secondsExcel = parseInt(timePartsExcel[2]);
-            const totalSecondsExcel = hoursExcel * 3600 + minutesExcel * 60 + secondsExcel;
+        Object.keys(groupedRecords).forEach(phase => {
+            const phaseGroup = groupedRecords[phase];
 
-            ws['C' + row].t = 'n';
-            ws['C' + row].v = totalSecondsExcel / 86400;
-            ws['C' + row].z = 'HH:MM:SS';
+            const phaseTitle = document.createElement('h4');
+            phaseTitle.textContent = phase.charAt(0).toUpperCase() + phase.slice(1);
+            recordsList.appendChild(phaseTitle);
 
-            XLSX.utils.sheet_add_aoa(ws, [[record.phase, record.positionDescription, formattedTime]], { origin: `A${row}` });
-            row++;
+            const phaseList = document.createElement('ul');
+            phaseGroup.forEach(record => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    <strong>Progetto: </strong>${record.projectName}<br>
+                    <strong>Posizione: </strong>${record.positionDescription}<br>
+                    <strong>Tempo: </strong>${record.recordedTime}<br>`;
+                phaseList.appendChild(listItem);
+            });
+            recordsList.appendChild(phaseList);
         });
 
-        const startTimeParts = startTimeRilevazione.split(':');
-        const startHours = parseInt(startTimeParts[0]);
-        const startMinutes = parseInt(startTimeParts[1]);
-        const startSeconds = parseInt(startTimeParts[2]);
-        const totalStartSeconds = startHours * 3600 + startMinutes * 60 + startSeconds;
-
-        ws['A' + (row + 2)].t = 'n';
-        ws['B' + (row + 2)].t = 'n';
-        ws['A' + (row + 2)].v = totalStartSeconds / 86400;
-        ws['B' + (row + 2)].v = totalStartSeconds / 86400;
-        ws['A' + (row + 2)].z = 'HH:MM:SS';
-        ws['B' + (row + 2)].z = 'HH:MM:SS';
-
-        const endTimeParts = endTimeRilevazione.split(':');
-        const endHours = parseInt(endTimeParts[0]);
-        const endMinutes = parseInt(endTimeParts[1]);
-        const endSeconds = parseInt(endTimeParts[2]);
-        const totalEndSeconds = endHours * 3600 + endMinutes * 60 + endSeconds;
-
-        ws['A' + (row + 3)].t = 'n';
-        ws['B' + (row + 3)].t = 'n';
-        ws['A' + (row + 3)].v = totalEndSeconds / 86400;
-        ws['B' + (row + 3)].v = totalEndSeconds / 86400;
-        ws['A' + (row + 3)].z = 'HH:MM:SS';
-        ws['B' + (row + 3)].z = 'HH:MM:SS';
-
-        XLSX.utils.sheet_add_aoa(ws, [['Orario inizio rilevazione:', startTimeRilevazione]], { origin: `A${row + 2}` });
-        XLSX.utils.sheet_add_aoa(ws, [['Orario fine rilevazione:', endTimeRilevazione]], { origin: `A${row + 3}` });
-
-        wb.SheetNames.push('Rilevazioni');
-        wb.Sheets['Rilevazioni'] = ws;
-
-        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
-        const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(url);
-
-    } catch (error) {
-        console.error("Error downloading Excel:", error);
-        alert(error.message);
+        savedRecordsSection.classList.remove('hidden');
     }
-}
+
+    function endRecord() {
+        saveRecord();
+        document.getElementById('end-record-btn').classList.add('hidden');
+        document.getElementById('download-excel-btn').classList.remove('hidden');
+    }
+
+    function downloadExcel() {
+        if (savedRecords.length === 0) {
+            alert("Non ci sono rilevazioni salvate da scaricare.");
+            return;
+        }
+
+        try {
+            if (typeof XLSX === 'undefined') {
+                throw new Error("XLSX library not loaded.");
+            }
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([]);
+
+            const projectName = savedRecords[0].projectName;
+            const headerStyle = {
+                font: {
+                    bold: true,
+                    sz: 26
+                }
+            };
+
+            ws['!cols'] = [{ wch: 30 }, { wch: 30 }, { wch: 15 }]; // Set column widths
+            ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }]; // Merge cells for project name
+
+            XLSX.utils.sheet_add_aoa(ws, [[projectName]], { origin: 'A1' });
+            ws['A1'].s = headerStyle;
+
+            if (savedRecords.length > 0 && savedRecords[0].imageName) {
+                const imageUrl = `/images/${savedRecords[0].imageName}`;
+                XLSX.utils.sheet_add_aoa(ws, [[`Image: ${imageUrl}`]], { origin: 'A2' });
+            }
+
+            const tableHeader = ['FASE', 'POSIZIONE', 'TEMPO'];
+            XLSX.utils.sheet_add_aoa(ws, [tableHeader], { origin: 'A3' });
+
+            let row = 4;
+            savedRecords.forEach(record => {
+                const formattedTime = convertTimeToExcelDuration(record.recordedTime);
+                XLSX.utils.sheet_add_aoa(ws, [[record.phase, record.positionDescription, { t: 'n', v: formattedTime, z: '[h]:mm:ss' }]], { origin: `A${row}` });
+                row++;
+            });
+
+            XLSX.utils.sheet_add_aoa(ws, [['Orario inizio rilevazione:', startTimeRilevazione]], { origin: `A${row + 2}` });
+            XLSX.utils.sheet_add_aoa(ws, [['Orario fine rilevazione:', endTimeRilevazione]], { origin: `A${row + 3}` });
+
+            wb.SheetNames.push('Rilevazioni');
+            wb.Sheets['Rilevazioni'] = ws;
+
+            const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+            const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${projectName}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.error("Error downloading Excel:", error);
+            alert(error.message);
+        }
+    }
+
+    function convertTimeToExcelDuration(timeString) {
+        const timeParts = timeString.split(':');
+        const minutes = parseInt(timeParts[0]);
+        const seconds = parseInt(timeParts[1]);
+        const centiseconds = parseInt(timeParts[2]) / 100;
+        return (minutes * 60 + seconds + centiseconds) / 86400; // Convert total seconds to Excel duration
+    }
+});

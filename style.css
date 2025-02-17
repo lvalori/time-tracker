@@ -88,6 +88,10 @@ li {
     display: none;
 }
 
+.visible {
+    display: block;
+}
+
 /* Stile per schermi più piccoli */
 @media (max-width: 768px) {
     .container {
