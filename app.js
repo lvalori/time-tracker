@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const timeParts = timeString.split(':');
         const minutes = parseInt(timeParts[0]);
         const seconds = parseInt(timeParts[1]);
-        const centiseconds = parseInt(timeParts[2]) / 100;
+        const centiseconds = timeParts.length > 2 ? parseInt(timeParts[2]) / 100 : 0;
         return (minutes * 60 + seconds + centiseconds) / 86400; // Convert total seconds to Excel duration
     }
 });
