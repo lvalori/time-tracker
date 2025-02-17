@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    </head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Time Tracker</h1>
+        </header>
+
+        <main>
+            <section id="new-record-screen">
+                <button id="new-project-btn">Nuova Rilevazione</button>
+            </section>
+
+            <section id="project-form" class="hidden">
+                <h2>Nuova Rilevazione</h2>
+                <label for="project-name">Nome Progetto:</label>
+                <input type="text" id="project-name" placeholder="Nome progetto">
+
+                <form id="image-upload-form">
+                    <label for="image-upload">Immagine:</label>
+                    <input type="file" id="image-upload" name="image">
+                    <img id="image-preview" src="" alt="Anteprima">
+                </form>
+
+                <label for="phase-select">Fase:</label>
+                <select id="phase-select">
+                    <option value="sbassatura">Sbassatura</option>
+                    <option value="scarnitura">Scarnitura</option>
+                    <option value="segni">Segni</option>
+                    <option value="applicazione">Applicazione</option>
+                    <option value="cucitura-tomaia">Cucitura Tomaia</option>
+                    <option value="cucitura-fodera">Cucitura Fodera</option>
+                </select>
+
+                <label for="position-description">Posizione:</label>
+                <input type="text" id="position-description" placeholder="Descrizione posizione">
+
+                <div class="timer-controls">
+                    <button id="start-timer-btn">Avvia</button>
+                    <button id="stop-timer-btn">Ferma</button>
+                    <div id="timer">00:00</div>  </div>
+
+                <button id="save-record-btn">Salva</button>
+            </section>
+
+            <section id="saved-records" class="hidden">
+                <h2>Rilevazioni</h2>
+                <ul id="records-list"></ul>
+                <button id="end-record-btn">Fine</button>
+                <button id="download-excel-btn" class="hidden">Scarica Excel</button>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
