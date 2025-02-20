@@ -6,7 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time Tracker</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.debug.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -55,9 +59,25 @@
 
             <section id="saved-records" class="hidden">
                 <h2>Rilevazioni</h2>
-                <ul id="records-list"></ul>
+                <h3 id="project-name-display"></h3>
+                <div id="summary">
+                    <div id="image-container">
+                        <img id="summary-image" src="" alt="Immagine caricata">
+                    </div>
+                    <div id="chart-container">
+                        <canvas id="phase-chart"></canvas>
+                        <div id="chart-legend"></div>
+                    </div>
+                </div>
+                <div id="records-list"></div>
+                <div id="total-times">
+                    <p id="start-time"></p>
+                    <p id="end-time"></p>
+                    <p id="total-time"></p>
+                </div>
                 <button id="end-record-btn">Fine</button>
                 <button id="download-excel-btn" class="hidden">Scarica Excel</button>
+                <button id="download-pdf-btn" class="hidden">Esporta in PDF</button>
             </section>
         </main>
     </div>
