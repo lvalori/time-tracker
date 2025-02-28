@@ -2,122 +2,86 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tempi Aggiunteria</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
     <style>
-        body {
-            background-color: #f8f9fa;
-            padding: 20px;
+        body { 
+            background-color: #f8f9fa; 
+            padding: 10px;
+            touch-action: manipulation;
         }
         .container {
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        h1, h2 {
-            text-align: center;
-            margin-bottom: 30px;
+            padding: 15px;
+            margin-bottom: 15px;
+            max-width: 100%;
         }
         .timer {
-            font-size: 2em;
+            font-size: 3em;
             text-align: center;
-            margin: 20px 0;
+            margin: 15px 0;
             font-weight: bold;
             color: #333;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .btn {
+            padding: 12px;
+            margin: 5px 0;
+            font-size: 1.1em;
+        }
+        input, select {
+            height: 44px !important;
+            font-size: 16px !important;
         }
         .positions-list {
-            margin-top: 20px;
-            font-size: 0.9em;
-            color: #555;
-        }
-        .positions-list ul {
-            list-style-type: none;
-            padding: 0;
+            margin-top: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
         }
         .positions-list li {
-            margin-bottom: 8px;
-            padding: 5px;
-            border-bottom: 1px solid #eee;
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 4px;
         }
         .table-header-sbassatura { background: linear-gradient(135deg, #ff6384, #ff4d6d); color: white; }
         .table-header-scarnitura { background: linear-gradient(135deg, #36a2eb, #2d8fd9); color: white; }
         .table-header-segni { background: linear-gradient(135deg, #cc65fe, #b94aeb); color: white; }
         .table-header-applicazione { background: linear-gradient(135deg, #ffce56, #ffc107); color: white; }
         .table-header-cucitura { background: linear-gradient(135deg, #4bc0c0, #3da3a3); color: white; }
-        .chart-legend {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            margin-top: 20px;
-        }
-        .chart-legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            padding: 5px;
-            border-radius: 4px;
-            width: 100%;
-        }
-        .legend-color-box {
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
-            border-radius: 3px;
-        }
-        .icon-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.5em;
-            margin: 10px;
-            transition: transform 0.2s;
-            color: #555;
-        }
-        .icon-button:hover {
-            transform: scale(1.2);
-            color: #333;
-        }
-        .hidden {
-            display: none;
-        }
-        @media print {
-            .container {
-                box-shadow: none;
-                margin: 0;
-                padding: 0;
-            }
-            .no-print {
-                display: none;
-            }
-        }
-        .card {
-            border: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .time-info {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
+        .hidden { display: none; }
+        @media print { .no-print { display: none; } }
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .timer { font-size: 2.5em; }
+            .btn { padding: 10px; }
         }
     </style>
 </head>
 <body>
-    <div class="container" id="data-container">
-        <h1>Tempi Aggiunteria</h1>
+    <div class="container">
+        <h1 class="text-center mb-4">Tempi Aggiunteria</h1>
+        
         <form id="data-form">
             <div class="form-group">
                 <label for="article-name">Nome Articolo:</label>
                 <input type="text" id="article-name" class="form-control" required>
             </div>
+            
             <div class="form-group">
-                <label for="article-image">Immagine Articolo:</label>
-                <input type="file" id="article-image" class="form-control-file" accept="image/*" required>
+                <label for="article-image">Foto:</label>
+                <input type="file" id="article-image" class="form-control-file" accept="image/*" capture="camera">
             </div>
+            
             <div class="form-group">
                 <label for="phase">Fase:</label>
                 <select id="phase" class="form-control" required>
@@ -128,76 +92,154 @@
                     <option value="cucitura">Cucitura</option>
                 </select>
             </div>
+            
             <div class="form-group">
                 <label for="position">Posizione:</label>
                 <input type="text" id="position" class="form-control" required>
             </div>
-            <div class="form-group">
-                <button type="button" id="start-timer" class="btn btn-primary btn-block">Avvia Timer</button>
-                <button type="button" id="stop-timer" class="btn btn-danger btn-block" disabled>Ferma Timer</button>
-            </div>
+
             <div class="timer" id="timer">00:00:00</div>
+            
             <div class="form-group">
-                <button type="button" id="proceed" class="btn btn-secondary btn-block">Prosegui</button>
-                <button type="button" id="end" class="btn btn-success btn-block">Fine Rilevazioni</button>
+                <button type="button" id="start-timer" class="btn btn-primary btn-block">
+                    <i class="fas fa-play"></i> Avvia Timer
+                </button>
+                <button type="button" id="stop-timer" class="btn btn-danger btn-block" disabled>
+                    <i class="fas fa-stop"></i> Ferma Timer
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <button type="button" id="proceed" class="btn btn-secondary btn-block">
+                    <i class="fas fa-forward"></i> Prosegui
+                </button>
+                <button type="button" id="end" class="btn btn-success btn-block">
+                    <i class="fas fa-check"></i> Fine Rilevazioni
+                </button>
             </div>
         </form>
+
         <div class="positions-list hidden" id="positions-list">
             <h3>Posizioni Registrate</h3>
-            <ul id="positions-data"></ul>
+            <ul id="positions-data" class="list-unstyled"></ul>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
     <script>
+        // Variabili globali
+        window.phaseData = {};
+        let startTime, endTime, timerInterval;
+        let currentPhaseData = {};
+
+        // Funzioni di utilità
+        function formatTime(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            const start = currentPhaseData.start;
+            timerInterval = setInterval(() => {
+                const now = new Date();
+                const elapsed = Math.floor((now - start) / 1000);
+                const timerElement = document.getElementById('timer');
+                if (timerElement) {
+                    timerElement.textContent = formatTime(elapsed);
+                } else {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            const timerElement = document.getElementById('timer');
+            if (timerElement) {
+                timerElement.textContent = '00:00:00';
+            }
+        }
+
+        window.exportToExcel = function() {
+            try {
+                if (Object.keys(window.phaseData).length === 0) {
+                    alert('Non ci sono dati da esportare');
+                    return;
+                }
+
+                const articleName = document.querySelector('h2').textContent.trim();
+                const workbook = XLSX.utils.book_new();
+                
+                // Foglio riepilogativo
+                const summaryData = [
+                    ['Riepilogo Tempi Aggiunteria'],
+                    ['Articolo', articleName],
+                    ['Data', new Date().toLocaleDateString()],
+                    ['Inizio', startTime.toLocaleTimeString()],
+                    ['Fine', endTime.toLocaleTimeString()],
+                    [''],
+                    ['Fase', 'Tempo Totale']
+                ];
+
+                Object.entries(window.phaseData).forEach(([phase, data]) => {
+                    const totalTime = data.reduce((sum, item) => sum + item.timeSpent, 0);
+                    summaryData.push([
+                        phase.charAt(0).toUpperCase() + phase.slice(1),
+                        formatTime(totalTime)
+                    ]);
+                });
+
+                XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(summaryData), 'Riepilogo');
+
+                // Fogli per ogni fase
+                for (const phase in window.phaseData) {
+                    const worksheetData = [['Posizione', 'Tempo']];
+                    window.phaseData[phase].forEach(data => {
+                        worksheetData.push([data.position, formatTime(data.timeSpent)]);
+                    });
+
+                    const totalTime = window.phaseData[phase].reduce((sum, data) => sum + data.timeSpent, 0);
+                    worksheetData.push(['', '']);
+                    worksheetData.push(['Totale', formatTime(totalTime)]);
+
+                    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(worksheetData), phase);
+                }
+
+                const fileName = `${articleName || 'Tempi_Aggiunteria'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+                
+                // Gestione specifica per dispositivi mobili
+                const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                return true;
+            } catch (error) {
+                console.error('Errore durante l\'esportazione:', error);
+                alert('Si è verificato un errore durante l\'esportazione in Excel.');
+                return false;
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('data-form');
             const startTimerBtn = document.getElementById('start-timer');
             const stopTimerBtn = document.getElementById('stop-timer');
             const proceedBtn = document.getElementById('proceed');
             const endBtn = document.getElementById('end');
-            const timerDisplay = document.getElementById('timer');
             const positionsList = document.getElementById('positions-list');
             const positionsData = document.getElementById('positions-data');
-            const dataContainer = document.getElementById('data-container');
-
-            let startTime, endTime, timerInterval;
-            let currentPhaseData = {};
-            let phaseData = {};
-
-            window.formatTime = function(seconds) {
-                const hrs = Math.floor(seconds / 3600);
-                const mins = Math.floor((seconds % 3600) / 60);
-                const secs = seconds % 60;
-                return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            }
-
-            window.exportToExcel = function() {
-                const workbook = XLSX.utils.book_new();
-                workbook.Props = {
-                    Title: "Tempi Aggiunteria",
-                    Author: "Sistema Rilevazioni",
-                    CreatedDate: new Date()
-                };
-
-                for (const phase in phaseData) {
-                    const worksheetData = [["Posizione", "Tempo"]];
-                    phaseData[phase].forEach(data => {
-                        worksheetData.push([data.position, formatTime(data.timeSpent)]);
-                    });
-
-                    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-                    XLSX.utils.book_append_sheet(workbook, worksheet, phase);
-                }
-
-                XLSX.writeFile(workbook, `${document.getElementById('article-name').value.toUpperCase()}.xlsx`);
-            }
 
             startTimerBtn.addEventListener('click', () => {
-                if (!startTime) {
-                    startTime = new Date();
-                }
+                if (!startTime) startTime = new Date();
                 currentPhaseData.start = new Date();
                 startTimer();
                 startTimerBtn.disabled = true;
@@ -208,14 +250,19 @@
                 currentPhaseData.end = new Date();
                 currentPhaseData.timeSpent = Math.ceil((currentPhaseData.end - currentPhaseData.start) / 1000);
                 if (currentPhaseData.timeSpent < 1) currentPhaseData.timeSpent = 1;
+
                 const phase = document.getElementById('phase').value;
                 const position = document.getElementById('position').value;
                 currentPhaseData.position = position;
-                if (!phaseData[phase]) {
-                    phaseData[phase] = [];
-                }
-                phaseData[phase].push(currentPhaseData);
-                appendPositionData(phase, currentPhaseData);
+
+                if (!window.phaseData[phase]) window.phaseData[phase] = [];
+                window.phaseData[phase].push(currentPhaseData);
+
+                const li = document.createElement('li');
+                li.textContent = `${phase}: ${position} - ${formatTime(currentPhaseData.timeSpent)}`;
+                positionsData.appendChild(li);
+                positionsList.classList.remove('hidden');
+
                 currentPhaseData = {};
                 stopTimer();
                 startTimerBtn.disabled = false;
@@ -228,246 +275,160 @@
 
             endBtn.addEventListener('click', () => {
                 endTime = new Date();
-                displaySummary();
-            });
+                const totalTime = Math.ceil((endTime - startTime) / 1000);
 
-            function startTimer() {
-                let start = currentPhaseData.start;
-                timerInterval = setInterval(() => {
-                    let now = new Date();
-                    let elapsed = Math.floor((now - start) / 1000);
-                    let hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
-                    let minutes = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
-                    let seconds = String(elapsed % 60).padStart(2, '0');
-                    timerDisplay.textContent = `${hours}:${minutes}:${seconds}`;
-                }, 1000);
-            }
-
-            function stopTimer() {
-                clearInterval(timerInterval);
-                timerDisplay.textContent = '00:00:00';
-            }
-
-            function appendPositionData(phase, data) {
-                const listItem = document.createElement('li');
-                listItem.textContent = `${phase}: ${data.position} - ${formatTime(data.timeSpent)}`;
-                positionsData.appendChild(listItem);
-                positionsList.classList.remove('hidden');
-            }
-
-            function createPhaseTableHtml(phase) {
-                const data = phaseData[phase];
-                let tableHtml = `
-                    <div class="col-md-6 mb-4">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th colspan="2" class="table-header-${phase}">${phase.charAt(0).toUpperCase() + phase.slice(1)}</th>
-                                </tr>
-                                <tr>
-                                    <th>Posizione</th>
-                                    <th>Tempo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                
-                data.forEach(item => {
-                    tableHtml += `
-                        <tr>
-                            <td>${item.position}</td>
-                            <td>${formatTime(item.timeSpent)}</td>
-                        </tr>
-                    `;
+                const phaseTotals = {};
+                Object.entries(window.phaseData).forEach(([phase, data]) => {
+                    phaseTotals[phase] = data.reduce((sum, item) => sum + item.timeSpent, 0);
                 });
 
-                tableHtml += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-                return tableHtml;
-            }
+                let imageHtml = '';
+                const imageFile = document.getElementById('article-image').files[0];
+                if (imageFile) {
+                    const imageUrl = URL.createObjectURL(imageFile);
+                    imageHtml = `<img src="${imageUrl}" class="img-fluid mb-3" style="max-height: 200px; object-fit: contain;">`;
+                }
 
-            function displaySummary() {
-                let tablesHtml = '';
-                Object.keys(phaseData).forEach(phase => {
-                    tablesHtml += createPhaseTableHtml(phase);
-                });
-
-                const popupContent = `
-                    <!DOCTYPE html>
-                    <html lang="it">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>Riepilogo Tempi Aggiunteria</title>
-                        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-                        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                        <style>
-                            body { 
-                                font-family: Arial, sans-serif;
-                                padding: 20px;
-                                background-color: #f8f9fa;
-                            }
-                            .container {
-                                background-color: #fff;
-                                border-radius: 8px;
-                                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                                padding: 20px;
-                                margin-bottom: 20px;
-                            }
-                            .table-header-sbassatura { background: linear-gradient(135deg, #ff6384, #ff4d6d); color: white; }
-                            .table-header-scarnitura { background: linear-gradient(135deg, #36a2eb, #2d8fd9); color: white; }
-                            .table-header-segni { background: linear-gradient(135deg, #cc65fe, #b94aeb); color: white; }
-                            .table-header-applicazione { background: linear-gradient(135deg, #ffce56, #ffc107); color: white; }
-                            .table-header-cucitura { background: linear-gradient(135deg, #4bc0c0, #3da3a3); color: white; }
-                            .chart-legend-item { 
-                                display: flex; 
-                                align-items: center; 
-                                margin-bottom: 10px; 
-                                padding: 5px;
-                                border-radius: 4px;
-                            }
-                            .legend-color-box { 
-                                width: 20px; 
-                                height: 20px; 
-                                margin-right: 10px;
-                                border-radius: 3px;
-                            }
-                            .icon-button {
-                                background: none;
-                                border: none;
-                                cursor: pointer;
-                                font-size: 1.5em;
-                                margin: 10px;
-                                transition: transform 0.2s;
-                                color: #555;
-                            }
-                            .icon-button:hover {
-                                transform: scale(1.2);
-                                color: #333;
-                            }
-                            @media print {
-                                .no-print {
-                                    display: none;
-                                }
-                            }
-                            .card {
-                                border: none;
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                            }
-                            .time-info {
-                                background-color: #f8f9fa;
-                                border-radius: 8px;
-                                padding: 15px;
-                                margin-top: 20px;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <h2 class="text-center mb-4">${document.getElementById('article-name').value.toUpperCase()}</h2>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <img src="${URL.createObjectURL(document.getElementById('article-image').files[0])}" 
-                                         alt="Immagine Articolo" class="img-fluid mb-3">
-                                    <div class="card">
-                                        <div class="card-body time-info">
-                                            <p class="mb-2"><strong>Inizio Rilevazioni:</strong> ${startTime.toLocaleTimeString()}</p>
-                                            <p class="mb-2"><strong>Fine Rilevazioni:</strong> ${endTime.toLocaleTimeString()}</p>
-                                            <p class="mb-0"><strong>Tempo Totale:</strong> ${formatTime(Math.ceil((endTime - startTime) / 1000))}</p>
+                const mainContainer = document.querySelector('.container');
+                mainContainer.innerHTML = `
+                    <div class="summary-container">
+                        <div class="row align-items-start">
+                            <div class="col-12">
+                                <h2 class="text-center mb-3">${document.getElementById('article-name').value.toUpperCase()}</h2>
+                                <div class="card mb-3">
+                                    <div class="card-body p-2">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col-md-4 text-center">
+                                                ${imageHtml}
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="d-flex justify-content-between">
+                                                    <div class="px-2">
+                                                        <small class="text-muted">Inizio:</small>
+                                                        <br><strong>${startTime.toLocaleTimeString()}</strong>
+                                                    </div>
+                                                    <div class="px-2">
+                                                        <small class="text-muted">Fine:</small>
+                                                        <br><strong>${endTime.toLocaleTimeString()}</strong>
+                                                    </div>
+                                                    <div class="px-2">
+                                                        <small class="text-muted">Tempo Totale:</small>
+                                                        <br><strong>${formatTime(totalTime)}</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                            </div>
+
+                            <div class="col-md-6">
+                                <div style="height: 300px;">
                                     <canvas id="phase-chart"></canvas>
                                 </div>
-                                <div class="col-md-4">
-                                    <div id="chart-legend"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Fase</th>
+                                                <th>Tempo Totale</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${Object.entries(phaseTotals).map(([phase, total]) => `
+                                                <tr>
+                                                    <td>${phase.charAt(0).toUpperCase() + phase.slice(1)}</td>
+                                                    <td>${formatTime(total)}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
-                            <div class="row mt-4">
-                                ${tablesHtml}
+
+                                                        <div class="col-12 mt-3">
+                                <div class="row">
+                                    ${Object.entries(window.phaseData).map(([phase, data]) => `
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card">
+                                                <div class="card-header table-header-${phase} text-white py-1">
+                                                    ${phase.charAt(0).toUpperCase() + phase.slice(1)}
+                                                    <span class="float-right">${formatTime(phaseTotals[phase])}</span>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-striped mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Posizione</th>
+                                                                <th>Tempo</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            ${data.map(item => `
+                                                                <tr>
+                                                                    <td>${item.position}</td>
+                                                                    <td>${formatTime(item.timeSpent)}</td>
+                                                                </tr>
+                                                            `).join('')}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
                             </div>
-                            <div class="text-center mt-3 no-print">
-                                <button onclick="window.opener.exportToExcel()" class="icon-button" title="Esporta in Excel">
-                                    <i class="fas fa-file-excel"></i>
-                                </button>
-                                <button onclick="window.print()" class="icon-button" title="Stampa">
-                                    <i class="fas fa-print"></i>
-                                </button>
+
+                            <div class="col-12">
+                                <div class="text-center mt-3 mb-2 no-print">
+                                    <button onclick="exportToExcel()" class="btn btn-sm btn-outline-success mx-1">
+                                        <i class="fas fa-file-excel"></i> Excel
+                                    </button>
+                                    <button onclick="window.print()" class="btn btn-sm btn-outline-primary mx-1">
+                                        <i class="fas fa-print"></i> Stampa
+                                    </button>
+                                    <button onclick="location.reload()" class="btn btn-sm btn-outline-secondary mx-1">
+                                        <i class="fas fa-redo"></i> Nuova
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <script>
-                            const phaseData = ${JSON.stringify(phaseData)};
-                            const ctx = document.getElementById('phase-chart').getContext('2d');
-                            const phaseLabels = Object.keys(phaseData);
-                            const phaseTimes = phaseLabels.map(phase => {
-                                return phaseData[phase].reduce((total, data) => total + data.timeSpent, 0);
-                            });
-
-                            new Chart(ctx, {
-                                type: 'doughnut',
-                                data: {
-                                    labels: phaseLabels,
-                                    datasets: [{
-                                        data: phaseTimes,
-                                        backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0'],
-                                        borderWidth: 2,
-                                        borderColor: 'white',
-                                        hoverBorderWidth: 4
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    cutout: '60%',
-                                    plugins: {
-                                        legend: {
-                                            display: false
-                                        },
-                                        tooltip: {
-                                            callbacks: {
-                                                label: function(context) {
-                                                    return context.label + ': ' + 
-                                                           window.opener.formatTime(context.raw);
-                                                }
-                                            }
-                                        }
-                                    },
-                                    animation: {
-                                        animateScale: true,
-                                        animateRotate: true
-                                    }
-                                }
-                            });
-
-                            // Aggiunta della legenda personalizzata
-                            const chartLegend = document.getElementById('chart-legend');
-                            const colors = ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0'];
-                            phaseLabels.forEach((label, index) => {
-                                const legendItem = document.createElement('div');
-                                legendItem.classList.add('chart-legend-item');
-                                const colorBox = document.createElement('div');
-                                colorBox.classList.add('legend-color-box');
-                                colorBox.style.backgroundColor = colors[index];
-                                const legendText = document.createElement('div');
-                                legendText.innerHTML = '<strong>' + label + ':</strong> ' + 
-                                                     window.opener.formatTime(phaseTimes[index]);
-                                legendItem.appendChild(colorBox);
-                                legendItem.appendChild(legendText);
-                                chartLegend.appendChild(legendItem);
-                            });
-                        </script>
-                    </body>
-                    </html>
+                    </div>
                 `;
 
-                const popup = window.open('', 'Riepilogo', 'width=1000,height=800,menubar=no,toolbar=no,location=no,status=no');
-                popup.document.write(popupContent);
-                popup.document.close();
-            }
+                const ctx = document.getElementById('phase-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(phaseTotals),
+                        datasets: [{
+                            data: Object.values(phaseTotals),
+                            backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    generateLabels: function(chart) {
+                                        const data = chart.data;
+                                        return data.labels.map((label, i) => ({
+                                            text: `${label}: ${formatTime(data.datasets[0].data[i])}`,
+                                            fillStyle: chart.data.datasets[0].backgroundColor[i]
+                                        }));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
         });
     </script>
 </body>
