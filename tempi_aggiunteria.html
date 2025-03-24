@@ -52,6 +52,9 @@
             margin-bottom: 5px;
             background: white;
             border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .table-header-sbassatura { background: linear-gradient(135deg, #ff6384, #ff4d6d); color: white; }
         .table-header-scarnitura { background: linear-gradient(135deg, #36a2eb, #2d8fd9); color: white; }
@@ -59,11 +62,62 @@
         .table-header-applicazione { background: linear-gradient(135deg, #ffce56, #ffc107); color: white; }
         .table-header-cucitura { background: linear-gradient(135deg, #4bc0c0, #3da3a3); color: white; }
         .hidden { display: none; }
-        @media print { .no-print { display: none; } }
+        .image-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .image-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .delete-image {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+            line-height: 20px;
+            cursor: pointer;
+        }
+        .custom-file-label::after {
+            content: "Sfoglia";
+        }
+        .custom-file {
+            margin: 10px 0;
+        }
+        @media print { 
+            .no-print { 
+                display: none; 
+            } 
+        }
         @media (max-width: 768px) {
-            .container { padding: 10px; }
-            .timer { font-size: 2.5em; }
-            .btn { padding: 10px; }
+            .container { 
+                padding: 10px; 
+            }
+            .timer { 
+                font-size: 2.5em; 
+            }
+            .btn { 
+                padding: 10px; 
+            }
+            .custom-file-label, 
+            .custom-file-input {
+                height: 44px;
+                line-height: 44px;
+            }
         }
     </style>
 </head>
@@ -78,19 +132,30 @@
             </div>
             
             <div class="form-group">
-                <label for="article-image">Foto:</label>
-                <input type="file" id="article-image" class="form-control-file" accept="image/*" capture="camera">
+                <label>Immagini:</label>
+                <div class="image-gallery" id="image-gallery"></div>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="captureImage()">
+                    <i class="fas fa-camera"></i> Aggiungi Foto
+                </button>
+                <input type="file" id="image-input" class="hidden" accept="image/*" capture="camera" onchange="handleImageUpload(event)">
             </div>
             
             <div class="form-group">
                 <label for="phase">Fase:</label>
-                <select id="phase" class="form-control" required>
-                    <option value="sbassatura">Sbassatura</option>
-                    <option value="scarnitura">Scarnitura</option>
-                    <option value="segni">Segni</option>
-                    <option value="applicazione">Applicazione</option>
-                    <option value="cucitura">Cucitura</option>
-                </select>
+                <div class="input-group">
+                    <select id="phase" class="form-control" required>
+                        <option value="sbassatura">Sbassatura</option>
+                        <option value="scarnitura">Scarnitura</option>
+                        <option value="segni">Segni</option>
+                        <option value="applicazione">Applicazione</option>
+                        <option value="cucitura">Cucitura</option>
+                    </select>
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary" onclick="addCustomPhase()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <div class="form-group">
@@ -117,6 +182,16 @@
                     <i class="fas fa-check"></i> Fine Rilevazioni
                 </button>
             </div>
+
+            <div class="form-group no-print">
+                <button type="button" id="save-session" class="btn btn-info btn-block">
+                    <i class="fas fa-save"></i> Salva Sessione
+                </button>
+                <div class="custom-file mt-2">
+                    <input type="file" class="custom-file-input" id="load-session" accept=".json">
+                    <label class="custom-file-label" for="load-session">Carica Sessione Salvata</label>
+                </div>
+            </div>
         </form>
 
         <div class="positions-list hidden" id="positions-list">
@@ -127,14 +202,81 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script>
         // Variabili globali
         window.phaseData = {};
         let startTime, endTime, timerInterval;
         let currentPhaseData = {};
+        let images = [];
 
-        // Funzioni di utilità
+        function saveSessionToFile() {
+            const sessionData = {
+                phaseData: window.phaseData,
+                currentPhaseData,
+                startTime: startTime ? startTime.toISOString() : null,
+                images,
+                articleName: document.getElementById('article-name').value,
+                savedAt: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `timetracker_${sessionData.articleName || 'sessione'}_${timestamp}.json`;
+            
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function loadSessionFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const sessionData = JSON.parse(e.target.result);
+                    
+                    // Ripristina i dati della sessione
+                    window.phaseData = sessionData.phaseData;
+                    currentPhaseData = sessionData.currentPhaseData;
+                    startTime = sessionData.startTime ? new Date(sessionData.startTime) : null;
+                    images = sessionData.images || [];
+                    
+                    // Aggiorna l'interfaccia
+                    document.getElementById('article-name').value = sessionData.articleName || '';
+                    
+                    // Ripristina le immagini
+                    const gallery = document.getElementById('image-gallery');
+                    gallery.innerHTML = '';
+                    images.forEach((imageData, index) => {
+                        const container = createImageContainer(imageData, index);
+                        gallery.appendChild(container);
+                    });
+                    
+                    // Aggiorna la lista delle posizioni
+                    updatePositionsList();
+                    
+                    // Mostra un messaggio di conferma
+                    alert('Sessione caricata con successo!\n' + 
+                          'Articolo: ' + sessionData.articleName + '\n' +
+                          'Salvata il: ' + new Date(sessionData.savedAt).toLocaleString());
+                    
+                } catch (error) {
+                    console.error('Errore nel caricamento del file:', error);
+                    alert('Errore nel caricamento del file. Assicurati che sia un file di sessione valido.');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Resetta l'input file per permettere di caricare lo stesso file più volte
+            event.target.value = '';
+        }
+
         function formatTime(seconds) {
             const hrs = Math.floor(seconds / 3600);
             const mins = Math.floor((seconds % 3600) / 60);
@@ -143,25 +285,311 @@
         }
 
         function startTimer() {
-            const start = currentPhaseData.start;
+            if (!startTime) startTime = new Date();
+            currentPhaseData.start = new Date();
             timerInterval = setInterval(() => {
                 const now = new Date();
-                const elapsed = Math.floor((now - start) / 1000);
-                const timerElement = document.getElementById('timer');
-                if (timerElement) {
-                    timerElement.textContent = formatTime(elapsed);
-                } else {
-                    clearInterval(timerInterval);
-                }
+                const elapsed = Math.floor((now - currentPhaseData.start) / 1000);
+                document.getElementById('timer').textContent = formatTime(elapsed);
             }, 1000);
         }
 
         function stopTimer() {
             clearInterval(timerInterval);
-            const timerElement = document.getElementById('timer');
-            if (timerElement) {
-                timerElement.textContent = '00:00:00';
+            document.getElementById('timer').textContent = '00:00:00';
+        }
+
+        function captureImage() {
+            document.getElementById('image-input').click();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageData = e.target.result;
+                    images.push(imageData);
+                    const container = createImageContainer(imageData, images.length - 1);
+                    document.getElementById('image-gallery').appendChild(container);
+                };
+                reader.readAsDataURL(file);
             }
+        }
+
+        function createImageContainer(imageData, index) {
+            const container = document.createElement('div');
+            container.className = 'image-container';
+            container.innerHTML = `
+                <img src="${imageData}" alt="Foto ${index + 1}">
+                <span class="delete-image" onclick="deleteImage(${index})">&times;</span>
+            `;
+            return container;
+        }
+
+        function deleteImage(index) {
+            images.splice(index, 1);
+            updateImageGallery();
+        }
+
+        function updateImageGallery() {
+            const gallery = document.getElementById('image-gallery');
+            gallery.innerHTML = '';
+            images.forEach((imageData, index) => {
+                const container = createImageContainer(imageData, index);
+                gallery.appendChild(container);
+            });
+        }
+
+        function addCustomPhase() {
+            const phaseName = prompt('Inserisci il nome della nuova fase:');
+            if (phaseName) {
+                const select = document.getElementById('phase');
+                const option = document.createElement('option');
+                option.value = phaseName.toLowerCase();
+                option.textContent = phaseName;
+                select.appendChild(option);
+                select.value = option.value;
+            }
+        }
+
+        function updatePositionsList() {
+            const positionsList = document.getElementById('positions-list');
+            const positionsData = document.getElementById('positions-data');
+            positionsData.innerHTML = '';
+            
+            Object.entries(window.phaseData).forEach(([phase, data]) => {
+                data.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        ${phase}: ${item.position} - ${formatTime(item.timeSpent)}
+                        <button class="btn btn-sm btn-danger" onclick="deletePhase('${phase}', ${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    positionsData.appendChild(li);
+                });
+            });
+            
+            positionsList.classList.remove('hidden');
+        }
+
+        function deletePhase(phase, index) {
+            if (confirm('Sei sicuro di voler eliminare questa fase?')) {
+                window.phaseData[phase].splice(index, 1);
+                if (window.phaseData[phase].length === 0) {
+                    delete window.phaseData[phase];
+                }
+                updatePositionsList();
+            }
+        }
+
+        function initializeEventListeners() {
+            const startTimerBtn = document.getElementById('start-timer');
+            const stopTimerBtn = document.getElementById('stop-timer');
+            const proceedBtn = document.getElementById('proceed');
+            const endBtn = document.getElementById('end');
+
+            startTimerBtn.addEventListener('click', () => {
+                startTimer();
+                startTimerBtn.disabled = true;
+                stopTimerBtn.disabled = false;
+            });
+
+            stopTimerBtn.addEventListener('click', () => {
+                const end = new Date();
+                currentPhaseData.end = end;
+                const elapsed = Math.floor((end - currentPhaseData.start) / 1000);
+                currentPhaseData.timeSpent = elapsed < 1 ? 1 : elapsed;
+
+                const phase = document.getElementById('phase').value;
+                const position = document.getElementById('position').value;
+                currentPhaseData.position = position;
+
+                if (!window.phaseData[phase]) window.phaseData[phase] = [];
+                window.phaseData[phase].push({...currentPhaseData});
+
+                updatePositionsList();
+                stopTimer();
+                startTimerBtn.disabled = false;
+                stopTimerBtn.disabled = true;
+                currentPhaseData = {};
+            });
+
+            proceedBtn.addEventListener('click', () => {
+                document.getElementById('position').value = '';
+            });
+
+            endBtn.addEventListener('click', () => {
+                endTime = new Date();
+                const totalTime = Math.ceil((endTime - startTime) / 1000);
+
+                const phaseTotals = {};
+                Object.entries(window.phaseData).forEach(([phase, data]) => {
+                    phaseTotals[phase] = data.reduce((sum, item) => sum + item.timeSpent, 0);
+                });
+
+                const mainContainer = document.querySelector('.container');
+                mainContainer.innerHTML = generateSummaryHTML(phaseTotals, totalTime);
+
+                const ctx = document.getElementById('phase-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(phaseTotals),
+                        datasets: [{
+                            data: Object.values(phaseTotals),
+                            backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    generateLabels: function(chart) {
+                                        const data = chart.data;
+                                        return data.labels.map((label, i) => ({
+                                            text: `${label}: ${formatTime(data.datasets[0].data[i])}`,
+                                            fillStyle: chart.data.datasets[0].backgroundColor[i]
+                                        }));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Event listener per salvataggio/caricamento
+            document.getElementById('save-session').addEventListener('click', saveSessionToFile);
+            document.getElementById('load-session').addEventListener('change', loadSessionFromFile);
+        }
+
+        function generateSummaryHTML(phaseTotals, totalTime) {
+            let imageGalleryHtml = '';
+            if (images.length > 0) {
+                imageGalleryHtml = `
+                    <div class="image-gallery mb-3">
+                        ${images.map((imageData, index) => `
+                            <div class="image-container">
+                                <img src="${imageData}" alt="Foto ${index + 1}">
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="summary-container">
+                    <div class="row align-items-start">
+                        <div class="col-12">
+                            <h2 class="text-center mb-3">${document.getElementById('article-name').value.toUpperCase()}</h2>
+                            <div class="card mb-3">
+                                <div class="card-body p-2">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col-md-4 text-center">
+                                            ${imageGalleryHtml}
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="d-flex justify-content-between">
+                                                <div class="px-2">
+                                                    <small class="text-muted">Inizio:</small>
+                                                    <br><strong>${startTime.toLocaleTimeString()}</strong>
+                                                </div>
+                                                <div class="px-2">
+                                                    <small class="text-muted">Fine:</small>
+                                                    <br><strong>${endTime.toLocaleTimeString()}</strong>
+                                                </div>
+                                                <div class="px-2">
+                                                    <small class="text-muted">Tempo Totale:</small>
+                                                    <br><strong>${formatTime(totalTime)}</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div style="height: 300px;">
+                                <canvas id="phase-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Fase</th>
+                                            <th>Tempo Totale</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${Object.entries(phaseTotals).map(([phase, total]) => `
+                                            <tr>
+                                                <td>${phase.charAt(0).toUpperCase() + phase.slice(1)}</td>
+                                                <td>${formatTime(total)}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-3">
+                            <div class="row">
+                                ${Object.entries(window.phaseData).map(([phase, data]) => `
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card">
+                                            <div class="card-header table-header-${phase} text-white py-1">
+                                                ${phase.charAt(0).toUpperCase() + phase.slice(1)}
+                                                <span class="float-right">${formatTime(phaseTotals[phase])}</span>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-striped mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Posizione</th>
+                                                            <th>Tempo</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        ${data.map(item => `
+                                                            <tr>
+                                                                <td>${item.position}</td>
+                                                                <td>${formatTime(item.timeSpent)}</td>
+                                                            </tr>
+                                                        `).join('')}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="text-center mt-3 mb-2 no-print">
+                                <button onclick="exportToExcel()" class="btn btn-sm btn-outline-success mx-1">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                                <button onclick="window.print()" class="btn btn-sm btn-outline-primary mx-1">
+                                    <i class="fas fa-print"></i> Stampa
+                                </button>
+                                <button onclick="location.reload()" class="btn btn-sm btn-outline-secondary mx-1">
+                                    <i class="fas fa-redo"></i> Nuova
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         window.exportToExcel = function() {
@@ -211,7 +639,6 @@
 
                 const fileName = `${articleName || 'Tempi_Aggiunteria'}_${new Date().toISOString().split('T')[0]}.xlsx`;
                 
-                // Gestione specifica per dispositivi mobili
                 const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
                 const blob = new Blob([wbout], { type: 'application/octet-stream' });
                 const url = URL.createObjectURL(blob);
@@ -230,206 +657,6 @@
             }
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const startTimerBtn = document.getElementById('start-timer');
-            const stopTimerBtn = document.getElementById('stop-timer');
-            const proceedBtn = document.getElementById('proceed');
-            const endBtn = document.getElementById('end');
-            const positionsList = document.getElementById('positions-list');
-            const positionsData = document.getElementById('positions-data');
-
-            startTimerBtn.addEventListener('click', () => {
-                if (!startTime) startTime = new Date();
-                currentPhaseData.start = new Date();
-                startTimer();
-                startTimerBtn.disabled = true;
-                stopTimerBtn.disabled = false;
-            });
-
-            stopTimerBtn.addEventListener('click', () => {
-                currentPhaseData.end = new Date();
-                currentPhaseData.timeSpent = Math.ceil((currentPhaseData.end - currentPhaseData.start) / 1000);
-                if (currentPhaseData.timeSpent < 1) currentPhaseData.timeSpent = 1;
-
-                const phase = document.getElementById('phase').value;
-                const position = document.getElementById('position').value;
-                currentPhaseData.position = position;
-
-                if (!window.phaseData[phase]) window.phaseData[phase] = [];
-                window.phaseData[phase].push(currentPhaseData);
-
-                const li = document.createElement('li');
-                li.textContent = `${phase}: ${position} - ${formatTime(currentPhaseData.timeSpent)}`;
-                positionsData.appendChild(li);
-                positionsList.classList.remove('hidden');
-
-                currentPhaseData = {};
-                stopTimer();
-                startTimerBtn.disabled = false;
-                stopTimerBtn.disabled = true;
-            });
-
-            proceedBtn.addEventListener('click', () => {
-                document.getElementById('position').value = '';
-            });
-
-            endBtn.addEventListener('click', () => {
-                endTime = new Date();
-                const totalTime = Math.ceil((endTime - startTime) / 1000);
-
-                const phaseTotals = {};
-                Object.entries(window.phaseData).forEach(([phase, data]) => {
-                    phaseTotals[phase] = data.reduce((sum, item) => sum + item.timeSpent, 0);
-                });
-
-                let imageHtml = '';
-                const imageFile = document.getElementById('article-image').files[0];
-                if (imageFile) {
-                    const imageUrl = URL.createObjectURL(imageFile);
-                    imageHtml = `<img src="${imageUrl}" class="img-fluid mb-3" style="max-height: 200px; object-fit: contain;">`;
-                }
-
-                const mainContainer = document.querySelector('.container');
-                mainContainer.innerHTML = `
-                    <div class="summary-container">
-                        <div class="row align-items-start">
-                            <div class="col-12">
-                                <h2 class="text-center mb-3">${document.getElementById('article-name').value.toUpperCase()}</h2>
-                                <div class="card mb-3">
-                                    <div class="card-body p-2">
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col-md-4 text-center">
-                                                ${imageHtml}
-                                            </div>
-                                            <div class="col-md-8">
-                                                <div class="d-flex justify-content-between">
-                                                    <div class="px-2">
-                                                        <small class="text-muted">Inizio:</small>
-                                                        <br><strong>${startTime.toLocaleTimeString()}</strong>
-                                                    </div>
-                                                    <div class="px-2">
-                                                        <small class="text-muted">Fine:</small>
-                                                        <br><strong>${endTime.toLocaleTimeString()}</strong>
-                                                    </div>
-                                                    <div class="px-2">
-                                                        <small class="text-muted">Tempo Totale:</small>
-                                                        <br><strong>${formatTime(totalTime)}</strong>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div style="height: 300px;">
-                                    <canvas id="phase-chart"></canvas>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Fase</th>
-                                                <th>Tempo Totale</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${Object.entries(phaseTotals).map(([phase, total]) => `
-                                                <tr>
-                                                    <td>${phase.charAt(0).toUpperCase() + phase.slice(1)}</td>
-                                                    <td>${formatTime(total)}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                                                        <div class="col-12 mt-3">
-                                <div class="row">
-                                    ${Object.entries(window.phaseData).map(([phase, data]) => `
-                                        <div class="col-md-6 mb-3">
-                                            <div class="card">
-                                                <div class="card-header table-header-${phase} text-white py-1">
-                                                    ${phase.charAt(0).toUpperCase() + phase.slice(1)}
-                                                    <span class="float-right">${formatTime(phaseTotals[phase])}</span>
-                                                </div>
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-striped mb-0">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Posizione</th>
-                                                                <th>Tempo</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            ${data.map(item => `
-                                                                <tr>
-                                                                    <td>${item.position}</td>
-                                                                    <td>${formatTime(item.timeSpent)}</td>
-                                                                </tr>
-                                                            `).join('')}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="text-center mt-3 mb-2 no-print">
-                                    <button onclick="exportToExcel()" class="btn btn-sm btn-outline-success mx-1">
-                                        <i class="fas fa-file-excel"></i> Excel
-                                    </button>
-                                    <button onclick="window.print()" class="btn btn-sm btn-outline-primary mx-1">
-                                        <i class="fas fa-print"></i> Stampa
-                                    </button>
-                                    <button onclick="location.reload()" class="btn btn-sm btn-outline-secondary mx-1">
-                                        <i class="fas fa-redo"></i> Nuova
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                const ctx = document.getElementById('phase-chart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: Object.keys(phaseTotals),
-                        datasets: [{
-                            data: Object.values(phaseTotals),
-                            backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    generateLabels: function(chart) {
-                                        const data = chart.data;
-                                        return data.labels.map((label, i) => ({
-                                            text: `${label}: ${formatTime(data.datasets[0].data[i])}`,
-                                            fillStyle: chart.data.datasets[0].backgroundColor[i]
-                                        }));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            });
-        });
+        // Inizializza gli event listener al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', initializeEventListeners);
     </script>
-</body>
-</html>
