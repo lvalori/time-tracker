@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tempi Aggiunteria</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2D3142;
+            --secondary-color: #4F5D75;
+            --accent-color: #0066FF;
+            --background-light: #F9FAFC;
+            --text-primary: #2D3142;
+            --text-secondary: #4F5D75;
+            --success-color: #36B37E;
+            --error-color: #FF5630;
+        }
+
+        body { 
+            background-color: var(--background-light);
+            padding: 10px;
+            touch-action: manipulation;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(45, 49, 66, 0.08);
+            padding: 24px;
+            margin-bottom: 20px;
+            max-width: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .timer {
+            font-size: 3.5em;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: 600;
+            color: var(--primary-color);
+            padding: 15px;
+            background: linear-gradient(145deg, #ffffff, var(--background-light));
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(45, 49, 66, 0.05);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            margin: 6px 0;
+            font-size: 1.1em;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary { background: var(--accent-color); border: none; }
+        .btn-primary:hover {
+            background: #005ae6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 102, 255, 0.2);
+        }
+
+        .btn-success { background: var(--success-color); border: none; }
+        .btn-success:hover {
+            background: #2d8f63;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(54, 179, 126, 0.2);
+        }
+
+        input, select {
+            height: 48px !important;
+            font-size: 16px !important;
+            border-radius: 8px !important;
+            border: 1px solid rgba(79, 93, 117, 0.2) !important;
+            padding: 0 16px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-color) !important;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1) !important;
+            outline: none !important;
+        }
+
+        .positions-list {
+            margin-top: 20px;
+            background: var(--background-light);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .positions-list li {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(79, 93, 117, 0.1);
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .positions-list li:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(45, 49, 66, 0.05);
+        }
+
+        /* Stili per le intestazioni delle tabelle delle varie fasi */
+        .table-header-sbassatura { background: linear-gradient(135deg, #0066FF, #0052CC); }
+        .table-header-scarnitura { background: linear-gradient(135deg, #36B37E, #2D8F63); }
+        .table-header-segni { background: linear-gradient(135deg, #6554C0, #4C3F8F); }
+        .table-header-applicazioni-termo { background: linear-gradient(135deg, #FF991F, #DE850A); }
+        .table-header-applicazioni-manuali { background: linear-gradient(135deg, #FF6B6B, #FF5252); }
+        .table-header-cucitura { background: linear-gradient(135deg, #4F5D75, #2D3142); }
+        .table-header-ribattitura { background: linear-gradient(135deg, #00B8D9, #0087A6); }
+        .table-header-preparazione-montaggio { background: linear-gradient(135deg, #6554C0, #4C3F8F); }
+
+        .hidden { display: none; }
+
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+            margin: 15px 0;
+        }
+
+        .image-container {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(45, 49, 66, 0.1);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .image-container:hover img { transform: scale(1.05); }
+
+        .delete-image {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: var(--error-color);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            text-align: center;
+            line-height: 24px;
+            cursor: pointer;
+            opacity: 0.9;
+            transition: all 0.2s ease;
+        }
+
+        .delete-image:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .time-info {
+            background: var(--background-light);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        @media print { 
+            .no-print { display: none; }
+            body { background: white; }
+            .container {
+                box-shadow: none;
+                border: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            .timer { font-size: 2.8em; }
+            .btn { padding: 10px 20px; }
+            .image-gallery {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Tempi Aggiunteria</h1>
+
+        <!-- HOME SCREEN -->
+        <div id="home-screen">
+            <button class="btn btn-primary btn-block" onclick="showInsertTimeScreen()"><i class="fas fa-keyboard"></i> Inserisci Tempi</button>
+            <button class="btn btn-info btn-block" onclick="document.getElementById('load-session-home').click()"><i class="fas fa-upload"></i> Carica Sessione Salvata</button>
+            <button class="btn btn-success btn-block" onclick="showNewSessionScreen()"><i class="fas fa-plus"></i> Nuova Rilevazione</button>
+            <input type="file" class="d-none" id="load-session-home" accept=".json" onchange="loadSessionFromFile(event)">
+        </div>
+
+        <!-- FORM SCREEN - INSERISCI TEMPI MANUALI -->
+        <form id="insert-time-form" class="hidden" autocomplete="off">
+            <h4 class="mb-3 text-center">Inserisci Tempi Manualmente</h4>
+            
+            <!-- Nome Articolo e Avanzamento -->
+            <div class="form-row">
+                <div class="form-group col-md-8">
+                    <label for="article-name-manual">Nome Articolo:</label>
+                    <input type="text" id="article-name-manual" class="form-control" required>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="progress-manual">Avanzamento:</label>
+                    <select id="progress-manual" class="form-control" required>
+                        <option value="prototipo">Prototipo</option>
+                        <option value="campionario">Campionario</option>
+                        <option value="industrializzazione">Industrializzazione</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Immagini e Orari -->
+            <div class="form-row">
+                <div class="col-md-6">
+                    <label>Immagini:</label>
+                    <div class="image-gallery" id="image-gallery-manual"></div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="captureImage('manual')">
+                        <i class="fas fa-camera"></i> Aggiungi Foto
+                    </button>
+                    <input type="file" id="image-input-manual" class="hidden" accept="image/*" capture="camera" onchange="handleImageUpload(event, 'manual')">
+                </div>
+                <div class="col-md-6">
+                    <div class="time-info">
+                        <div class="form-group">
+                            <label for="manual-start-time">Orario Inizio:</label>
+                            <input type="text" id="manual-start-time" class="form-control" placeholder="00:00:00" pattern="^\d{2}:\d{2}:\d{2}$">
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-end-time">Orario Fine:</label>
+                            <input type="text" id="manual-end-time" class="form-control" placeholder="00:00:00" pattern="^\d{2}:\d{2}:\d{2}$">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fase e Posizione -->
+            <div class="form-group">
+                <label for="phase-manual">Fase:</label>
+                <div class="input-group">
+                    <select id="phase-manual" class="form-control" required>
+                        <option value="sbassatura">Sbassatura</option>
+                        <option value="scarnitura">Scarnitura</option>
+                        <option value="segni">Segni</option>
+                        <option value="applicazioni-termo">Applicazioni termo</option>
+                        <option value="applicazioni-manuali">Applicazioni manuali/collanti</option>
+                        <option value="cucitura">Cucitura</option>
+                        <option value="ribattitura">Ribattitura</option>
+                        <option value="preparazione-montaggio">Preparazione montaggio</option>
+                    </select>
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary" onclick="addCustomPhase('manual')">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="position-manual">Posizione:</label>
+                <input type="text" id="position-manual" class="form-control" required>
+            </div>
+
+            <!-- Tempo -->
+            <div class="form-row">
+                <div class="form-group col-8">
+                    <label for="manual-time">Tempo (hh:mm:ss):</label>
+                    <input type="text" id="manual-time" class="form-control" placeholder="00:00:00" pattern="^\d{2}:\d{2}:\d{2}$">
+                </div>
+                <div class="form-group col-4">
+                    <label for="manual-seconds">o Secondi:</label>
+                    <input type="number" id="manual-seconds" class="form-control" placeholder="in sec.">
+                </div>
+            </div>
+
+            <!-- Pulsanti -->
+            <div class="form-group">
+                <button type="button" class="btn btn-secondary btn-block" id="manual-add-btn" onclick="addManualTime()">Aggiungi</button>
+                <button type="button" class="btn btn-success btn-block" onclick="endManualInput()">Fine Rilevazioni</button>
+                <button type="button" class="btn btn-outline-secondary btn-block" onclick="showHomeScreen()">Torna alla Home</button>
+            </div>
+
+            <!-- Lista Posizioni -->
+            <div class="positions-list hidden" id="positions-list-manual">
+                <h3>Posizioni Inserite</h3>
+                <ul id="positions-data-manual" class="list-unstyled"></ul>
+            </div>
+        </form>
+
+        <!-- FORM SCREEN - NUOVA RILEVAZIONE (Timer) -->
+        <form id="new-session-form" class="hidden" autocomplete="off">
+            <!-- Nome Articolo e Avanzamento -->
+            <div class="form-row">
+                <div class="form-group col-md-8">
+                    <label for="article-name">Nome Articolo:</label>
+                    <input type="text" id="article-name" class="form-control" required>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="progress">Avanzamento:</label>
+                    <select id="progress" class="form-control" required>
+                        <option value="prototipo">Prototipo</option>
+                        <option value="campionario">Campionario</option>
+                        <option value="industrializzazione">Industrializzazione</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Immagini -->
+            <div class="form-group">
+                <label>Immagini:</label>
+                <div class="image-gallery" id="image-gallery"></div>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="captureImage()">
+                    <i class="fas fa-camera"></i> Aggiungi Foto
+                </button>
+                <input type="file" id="image-input" class="hidden" accept="image/*" capture="camera" onchange="handleImageUpload(event)">
+            </div>
+
+            <!-- Fase -->
+            <div class="form-group">
+                <label for="phase">Fase:</label>
+                <div class="input-group">
+                    <select id="phase" class="form-control" required>
+                        <option value="sbassatura">Sbassatura</option>
+                        <option value="scarnitura">Scarnitura</option>
+                        <option value="segni">Segni</option>
+                        <option value="applicazioni-termo">Applicazioni termo</option>
+                        <option value="applicazioni-manuali">Applicazioni manuali/collanti</option>
+                        <option value="cucitura">Cucitura</option>
+                        <option value="ribattitura">Ribattitura</option>
+                        <option value="preparazione-montaggio">Preparazione montaggio</option>
+                    </select>
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary" onclick="addCustomPhase()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Posizione e Timer -->
+            <div class="form-group">
+                <label for="position">Posizione:</label>
+                <input type="text" id="position" class="form-control" required>
+            </div>
+
+            <div class="timer" id="timer">00:00:00</div>
+
+            <!-- Pulsanti Timer -->
+            <div class="form-group">
+                <button type="button" id="start-timer" class="btn btn-primary btn-block">
+                    <i class="fas fa-play"></i> Avvia Timer
+                </button>
+                <button type="button" id="stop-timer" class="btn btn-danger btn-block" disabled>
+                    <i class="fas fa-stop"></i> Ferma Timer
+                </button>
+            </div>
+
+            <!-- Pulsanti Azione -->
+            <div class="form-group">
+                <button type="button" id="proceed" class="btn btn-secondary btn-block">
+                    <i class="fas fa-forward"></i> Prosegui
+                </button>
+                <button type="button" id="end" class="btn btn-success btn-block">
+                    <i class="fas fa-check"></i> Fine Rilevazioni
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-block" onclick="showHomeScreen()">Torna alla Home</button>
+            </div>
+
+            <!-- Lista Posizioni -->
+            <div class="positions-list hidden" id="positions-list">
+                <h3>Posizioni Registrate</h3>
+                <ul id="positions-data" class="list-unstyled"></ul>
+            </div>
+        </form>
+    </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Variabili globali
+        window.phaseData = {};
+        let startTime, endTime, timerInterval;
+        let currentPhaseData = {};
+        let images = [];
+        let imagesManual = [];
+        let manualPhaseData = {};
+        let manualArticleName = "";
+        let manualProgress = "";
+        let manualSavedAt = "";
+        let manualStartTime = "";
+        let manualEndTime = "";
+
+        // --- Utility Functions ---
+        function formatTime(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function timeStringToSeconds(str) {
+            if (/^\d+$/.test(str)) return parseInt(str, 10);
+            const parts = str.split(':');
+            if (parts.length !== 3) return 0;
+            return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+        }
+
+        function calculateTimeDifference(startTime, endTime) {
+            const start = timeStringToSeconds(startTime);
+            const end = timeStringToSeconds(endTime);
+            return formatTime(end - start);
+        }
+
+        // --- Screen Management ---
+        function showHomeScreen() {
+            document.getElementById('home-screen').classList.remove('hidden');
+            document.getElementById('insert-time-form').classList.add('hidden');
+            document.getElementById('new-session-form').classList.add('hidden');
+            resetManualForm();
+            resetNewSessionForm();
+        }
+
+        function showInsertTimeScreen() {
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('insert-time-form').classList.remove('hidden');
+            document.getElementById('new-session-form').classList.add('hidden');
+            resetManualForm();
+        }
+
+        function showNewSessionScreen() {
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('insert-time-form').classList.add('hidden');
+            document.getElementById('new-session-form').classList.remove('hidden');
+            resetNewSessionForm();
+        }
+
+        function resetManualForm() {
+            document.getElementById('article-name-manual').value = '';
+            document.getElementById('progress-manual').value = 'prototipo';
+            document.getElementById('position-manual').value = '';
+            document.getElementById('manual-time').value = '';
+            document.getElementById('manual-seconds').value = '';
+            document.getElementById('manual-start-time').value = '';
+            document.getElementById('manual-end-time').value = '';
+            document.getElementById('positions-list-manual').classList.add('hidden');
+            document.getElementById('positions-data-manual').innerHTML = '';
+            manualPhaseData = {};
+            imagesManual = [];
+            document.getElementById('image-gallery-manual').innerHTML = '';
+            manualArticleName = "";
+            manualProgress = "";
+            manualStartTime = "";
+            manualEndTime = "";
+        }
+
+        function resetNewSessionForm() {
+            document.getElementById('article-name').value = '';
+            document.getElementById('progress').value = 'prototipo';
+            document.getElementById('position').value = '';
+            document.getElementById('timer').textContent = '00:00:00';
+            document.getElementById('positions-list').classList.add('hidden');
+            document.getElementById('positions-data').innerHTML = '';
+            window.phaseData = {};
+            images = [];
+            document.getElementById('image-gallery').innerHTML = '';
+            currentPhaseData = {};
+            startTime = null;
+            endTime = null;
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('start-timer').disabled = false;
+            document.getElementById('stop-timer').disabled = true;
+        }
+
+        // --- Timer Management ---
+        document.getElementById('start-timer').addEventListener('click', function() {
+            startTime = new Date();
+            this.disabled = true;
+            document.getElementById('stop-timer').disabled = false;
+            timerInterval = setInterval(updateTimer, 1000);
+        });
+
+        document.getElementById('stop-timer').addEventListener('click', function() {
+            endTime = new Date();
+            clearInterval(timerInterval);
+            this.disabled = true;
+            document.getElementById('start-timer').disabled = false;
+            const timeSpent = Math.round((endTime - startTime) / 1000);
+            const phase = document.getElementById('phase').value;
+            const position = document.getElementById('position').value;
+            
+            if (!window.phaseData[phase]) window.phaseData[phase] = [];
+            window.phaseData[phase].push({
+                position: position,
+                timeSpent: timeSpent,
+                startTime: startTime.toTimeString().split(' ')[0],
+                endTime: endTime.toTimeString().split(' ')[0]
+            });
+            
+            updatePositionsList();
+            document.getElementById('position').value = '';
+            document.getElementById('timer').textContent = '00:00:00';
+        });
+
+        function updateTimer() {
+            const elapsed = Math.round((new Date() - startTime) / 1000);
+            document.getElementById('timer').textContent = formatTime(elapsed);
+        }
+
+        // --- Manual Time Input ---
+        function addManualTime() {
+            const articleNameManual = document.getElementById('article-name-manual').value.trim();
+            const progressManual = document.getElementById('progress-manual').value;
+            const phase = document.getElementById('phase-manual').value;
+            const position = document.getElementById('position-manual').value.trim();
+            let manualTime = document.getElementById('manual-time').value.trim();
+            let manualSeconds = document.getElementById('manual-seconds').value.trim();
+            const startTime = document.getElementById('manual-start-time').value.trim();
+            const endTime = document.getElementById('manual-end-time').value.trim();
+
+            let seconds = 0;
+            if (manualSeconds) {
+                seconds = parseInt(manualSeconds, 10) || 0;
+                manualTime = formatTime(seconds);
+                document.getElementById('manual-time').value = manualTime;
+            } else if (manualTime && manualTime.match(/^\d{2}:\d{2}:\d{2}$/)) {
+                seconds = timeStringToSeconds(manualTime);
+            } else {
+                alert('Inserire il tempo in secondi o nel formato hh:mm:ss.');
+                return;
+            }
+
+            if (!articleNameManual || !phase || !position || seconds <= 0) {
+                alert('Compila tutti i campi correttamente');
+                return;
+            }
+
+            if (!manualPhaseData[phase]) manualPhaseData[phase] = [];
+            manualPhaseData[phase].push({
+                position,
+                timeSpent: seconds,
+                startTime: startTime,
+                endTime: endTime
+            });
+
+            updatePositionsListManual();
+            document.getElementById('position-manual').value = '';
+            document.getElementById('manual-time').value = '';
+            document.getElementById('manual-seconds').value = '';
+        }
+
+        function updatePositionsListManual() {
+            const positionsList = document.getElementById('positions-list-manual');
+            const positionsData = document.getElementById('positions-data-manual');
+            positionsData.innerHTML = '';
+            Object.entries(manualPhaseData).forEach(([phase, data]) => {
+                data.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        ${phase}: ${item.position} - ${formatTime(item.timeSpent)}
+                        ${item.startTime && item.endTime ? ` (${item.startTime} - ${item.endTime})` : ''}
+                        <button class="btn btn-sm btn-danger" onclick="deleteManualPhase('${phase}', ${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    positionsData.appendChild(li);
+                });
+            });
+            positionsList.classList.remove('hidden');
+        }
+
+        function deleteManualPhase(phase, index) {
+            if (confirm('Sei sicuro di voler eliminare questa fase?')) {
+                manualPhaseData[phase].splice(index, 1);
+                if (manualPhaseData[phase].length === 0) {
+                    delete manualPhaseData[phase];
+                }
+                updatePositionsListManual();
+            }
+        }
+
+        function endManualInput() {
+            if (Object.keys(manualPhaseData).length === 0) {
+                alert('Nessun dato inserito!');
+                return;
+            }
+            manualArticleName = document.getElementById('article-name-manual').value.trim();
+            manualProgress = document.getElementById('progress-manual').value;
+            manualStartTime = document.getElementById('manual-start-time').value;
+            manualEndTime = document.getElementById('manual-end-time').value;
+            manualSavedAt = new Date().toISOString();
+            showManualSummary();
+        }
+
+        // --- Summary Display ---
+        function showManualSummary() {
+            const phaseTotals = {};
+            let totalTimeSum = 0;
+            Object.entries(manualPhaseData).forEach(([phase, data]) => {
+                const sum = data.reduce((sum, item) => sum + item.timeSpent, 0);
+                phaseTotals[phase] = sum;
+                totalTimeSum += sum;
+            });
+
+            const gallery = imagesManual.map((imageData, index) => `
+                <div class="image-container">
+                    <img src="${imageData}" alt="Foto ${index + 1}">
+                </div>
+            `).join('');
+
+            // Calcola il tempo totale dalla differenza tra inizio e fine
+            let totalTimeFromRange = '';
+            if (manualStartTime && manualEndTime) {
+                totalTimeFromRange = calculateTimeDifference(manualStartTime, manualEndTime);
+            }
+
+            // Mostra riepilogo
+            document.querySelector('.container').innerHTML = `
+                <div class="summary-container">
+                    <h2 class="text-center mb-3">
+                        ${manualArticleName.toUpperCase()}
+                        <small class="d-block text-muted">${manualProgress.charAt(0).toUpperCase() + manualProgress.slice(1)}</small>
+                    </h2>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="image-gallery">${gallery}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="time-info">
+                                <p><strong>Inizio:</strong> ${manualStartTime || 'Non specificato'}</p>
+                                <p><strong>Fine:</strong> ${manualEndTime || 'Non specificato'}</p>
+                                ${totalTimeFromRange ? `<p><strong>Tempo Totale:</strong> ${totalTimeFromRange}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div style="height: 300px;">
+                                <canvas id="manual-phase-chart"></canvas>
+                                <div class="text-center font-weight-bold mt-2">
+                                    Totale tempo registrato: <span id="manual-total-time">${formatTime(totalTimeSum)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr><th>Fase</th><th>Tempo Totale</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        ${Object.entries(phaseTotals).map(([phase, total]) => `
+                                            <tr>
+                                                <td>${phase.charAt(0).toUpperCase() + phase.slice(1)}</td>
+                                                <td>${formatTime(total)}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        ${Object.entries(manualPhaseData).map(([phase, data]) => `
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header table-header-${phase} text-white py-1">
+                                        ${phase.charAt(0).toUpperCase() + phase.slice(1)}
+                                        <span class="float-right">${formatTime(phaseTotals[phase])}</span>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-striped mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Posizione</th>
+                                                    <th>Tempo</th>
+                                                    ${data[0].startTime ? '<th>Orario</th>' : ''}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${data.map(item => `
+                                                    <tr>
+                                                        <td>${item.position}</td>
+                                                        <td>${formatTime(item.timeSpent)}</td>
+                                                        ${item.startTime ? `<td>${item.startTime} - ${item.endTime}</td>` : ''}
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="text-center mt-3 mb-2 no-print">
+                        <button onclick="exportToExcelManual()" class="btn btn-sm btn-outline-success mx-1">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                        <button onclick="window.print()" class="btn btn-sm btn-outline-primary mx-1">
+                            <i class="fas fa-print"></i> Stampa
+                        </button>
+                        <button onclick="saveManualSession()" class="btn btn-sm btn-outline-info mx-1">
+                            <i class="fas fa-save"></i> Salva sessione
+                        </button>
+                        <button onclick="window.location.reload()" class="btn btn-sm btn-outline-secondary mx-1">
+                            <i class="fas fa-redo"></i> Nuova
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Dopo il rendering, crea il grafico
+            setTimeout(() => {
+                const ctx = document.getElementById('manual-phase-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(phaseTotals),
+                        datasets: [{
+                            data: Object.values(phaseTotals),
+                            backgroundColor: ['#0066FF', '#36B37E', '#6554C0', '#FF991F', '#FF6B6B', '#4F5D75', '#00B8D9', '#6554C0']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    generateLabels: function(chart) {
+                                        const data = chart.data;
+                                        return data.labels.map((label, i) => ({
+                                            text: `${label}: ${formatTime(data.datasets[0].data[i])}`,
+                                            fillStyle: chart.data.datasets[0].backgroundColor[i]
+                                        }));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }, 50);
+        }
+
+        // --- File Management ---
+        function saveManualSession() {
+            const sessionData = {
+                phaseData: manualPhaseData,
+                images: imagesManual,
+                articleName: manualArticleName,
+                progress: manualProgress,
+                startTime: manualStartTime,
+                endTime: manualEndTime,
+                savedAt: manualSavedAt || new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `timetracker_${sessionData.articleName || 'sessione'}_${timestamp}.json`;
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function loadSessionFromFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const sessionData = JSON.parse(e.target.result);
+                        manualPhaseData = sessionData.phaseData || {};
+                        imagesManual = sessionData.images || [];
+                        manualArticleName = sessionData.articleName || "";
+                        manualProgress = sessionData.progress || "prototipo";
+                        manualStartTime = sessionData.startTime || "";
+                        manualEndTime = sessionData.endTime || "";
+                        manualSavedAt = sessionData.savedAt || new Date().toISOString();
+                        showManualSummary();
+                    } catch (error) {
+                        console.error('Errore nel caricamento del file:', error);
+                        alert('Errore nel caricamento del file. Verifica che sia un file valido.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // --- Image Management ---
+        function captureImage(context) {
+            if (context === 'manual') {
+                document.getElementById('image-input-manual').click();
+            } else {
+                document.getElementById('image-input').click();
+            }
+        }
+
+        function handleImageUpload(event, context) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageData = e.target.result;
+                    if (context === 'manual') {
+                        imagesManual.push(imageData);
+                        updateImageGallery('manual');
+                    } else {
+                        images.push(imageData);
+                        updateImageGallery();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateImageGallery(context = '') {
+            const galleryId = context === 'manual' ? 'image-gallery-manual' : 'image-gallery';
+            const imageArray = context === 'manual' ? imagesManual : images;
+            const gallery = document.getElementById(galleryId);
+            gallery.innerHTML = imageArray.map((imageData, index) => `
+                <div class="image-container">
+                    <img src="${imageData}" alt="Foto ${index + 1}">
+                    <div class="delete-image" onclick="deleteImage(${index}, '${context}')">&times;</div>
+                </div>
+            `).join('');
+        }
+
+        function deleteImage(index, context) {
+            if (context === 'manual') {
+                imagesManual.splice(index, 1);
+                updateImageGallery('manual');
+            } else {
+                images.splice(index, 1);
+                updateImageGallery();
+            }
+        }
+
+        // --- Excel Export ---
+        function exportToExcelManual() {
+            try {
+                if (Object.keys(manualPhaseData).length === 0) {
+                    alert('Non ci sono dati da esportare');
+                    return;
+                }
+
+                const workbook = XLSX.utils.book_new();
+                const articleName = manualArticleName || 'Tempi_Aggiunteria';
+
+                // Foglio riepilogativo
+                const summaryData = [
+                    ['Riepilogo Tempi Aggiunteria'],
+                    ['Articolo', articleName],
+                    ['Avanzamento', manualProgress],
+                    ['Data', new Date().toLocaleDateString()],
+                    ['Orario Inizio', manualStartTime],
+                    ['Orario Fine', manualEndTime],
+                    [''],
+                    ['Fase', 'Tempo Totale']
+                ];
+
+                Object.entries(manualPhaseData).forEach(([phase, data]) => {
+                    const totalTime = data.reduce((sum, item) => sum + item.timeSpent, 0);
+                    summaryData.push([
+                        phase.charAt(0).toUpperCase() + phase.slice(1),
+                        formatTime(totalTime)
+                    ]);
+                });
+
+                XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(summaryData), 'Riepilogo');
+
+                // Fogli per ogni fase
+                for (const phase in manualPhaseData) {
+                    const worksheetData = [['Posizione', 'Tempo', 'Orario Inizio', 'Orario Fine']];
+                    manualPhaseData[phase].forEach(data => {
+                        worksheetData.push([
+                            data.position,
+                            formatTime(data.timeSpent),
+                            data.startTime || '',
+                            data.endTime || ''
+                        ]);
+                    });
+
+                    const totalTime = manualPhaseData[phase].reduce((sum, data) => sum + data.timeSpent, 0);
+                    worksheetData.push(['', '', '', '']);
+                    worksheetData.push(['Totale', formatTime(totalTime), '', '']);
+
+                    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(worksheetData), phase);
+                }
+
+                const fileName = `${articleName}_${new Date().toISOString().split('T')[0]}.xlsx`;
+                const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                return true;
+            } catch (error) {
+                console.error('Errore durante l\'esportazione:', error);
+                alert('Si è verificato un errore durante l\'esportazione in Excel.');
+                return false;
+            }
+        }
+    </script>
+</body>
+</html>
